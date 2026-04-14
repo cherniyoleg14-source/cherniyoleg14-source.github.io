@@ -1,62 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        select, input, button { padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; }
-        button { background: #0088cc; color: white; border: none; cursor: pointer; }
-    </script>
+        body { font-family: sans-serif; background: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); padding: 20px; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #555; background: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; }
+    </style>
 </head>
 <body>
-    <h3>Отчет по объекту</h3>
+    <h3>Отчет со стройплощадки</h3>
     
     <label>Объект:</label>
-    <select id="projectSelect"></select>
+    <select id="project_select"></select>
+    <!-- Резервное поле, если список пуст -->
+    <input type="text" id="project_manual" placeholder="Имя объекта (если нет в списке)" style="display:none;">
 
-    <label>Оси/Место:</label>
-    <input type="text" id="axisInput" placeholder="Напр: А-Б / 1-3">
+    <label>Ось / Отметка:</label>
+    <input type="text" id="axis" placeholder="Например: А-Б, 1-5 эт">
 
     <label>Объем (м²):</label>
-    <input type="number" id="volumeInput" placeholder="0.00">
+    <input type="number" id="volume" placeholder="Введите число">
 
-    <button id="sendBtn">Отправить данные</button>
+    <button id="main_button">ОТПРАВИТЬ ОТЧЕТ</button>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand(); // Развернуть на весь экран
+        let tg = window.Telegram.WebApp;
+        tg.expand();
 
-        // 1. Получаем список проектов из URL (который бот прислал в ссылке)
-        const urlParams = new URLSearchParams(window.location.search);
-        const projectsStr = urlParams.get('projects') || "";
-        const projects = projectsStr.split(',');
+        // Заполняем список объектов из ссылки
+        const params = new URLSearchParams(window.location.search);
+        const projectsParam = params.get('projects');
+        const select = document.getElementById('project_select');
+        const manualInput = document.getElementById('project_manual');
 
-        const select = document.getElementById('projectSelect');
-        projects.forEach(p => {
-            if(p) {
+        if (projectsParam && projectsParam !== "") {
+            const projects = projectsParam.split(',');
+            projects.forEach(p => {
                 let opt = document.createElement('option');
-                opt.value = p;
-                opt.innerHTML = p;
+                opt.value = p; opt.innerHTML = p;
                 select.appendChild(opt);
-            }
-        });
+            });
+        } else {
+            select.style.display = 'none';
+            manualInput.style.display = 'block';
+        }
 
-        // 2. Логика отправки данных в бот
-        document.getElementById('sendBtn').addEventListener('click', () => {
-            const data = {
-                project: select.value,
-                axis: document.getElementById('axisInput').value,
-                volume: document.getElementById('volumeInput').value
-            };
+        document.getElementById('main_button').addEventListener('click', () => {
+            let proj = select.style.display === 'none' ? manualInput.value : select.value;
+            let axis = document.getElementById('axis').value;
+            let vol = document.getElementById('volume').value;
 
-            if (!data.axis || !data.volume) {
+            if(!proj || !axis || !vol) {
                 alert("Пожалуйста, заполните все поля!");
                 return;
             }
 
-            // ЭТА СТРОЧКА ОТПРАВЛЯЕТ ДАННЫЕ В БОТ
-            tg.sendData(JSON.stringify(data));
-            tg.close(); // Закрыть Web App после отправки
+            let data = { project: proj, axis: axis, volume: vol };
+            tg.sendData(JSON.stringify(data)); // Отправка данных боту
         });
     </script>
 </body>
