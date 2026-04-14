@@ -1,66 +1,152 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org"></script>
+    <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        body { font-family: sans-serif; background: var(--tg-theme-bg-color); color: var(--tg-theme-text-color); padding: 20px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #555; background: var(--tg-theme-secondary-bg-color); color: var(--tg-theme-text-color); box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: var(--tg-theme-button-color); color: var(--tg-theme-button-text-color); border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; }
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #fff);
+            --text-color: var(--tg-theme-text-color, #000);
+            --hint-color: var(--tg-theme-hint-color, #999);
+            --button-color: var(--tg-theme-button-color, #2481cc);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #efeff3);
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--secondary-bg); color: var(--text-color); margin: 0; padding: 0; padding-bottom: 70px; }
+        
+        /* Вкладки */
+        .tab-content { display: none; padding: 15px; }
+        .tab-content.active { display: block; }
+
+        /* Нижнее меню */
+        .nav-bar { position: fixed; bottom: 0; width: 100%; height: 60px; background: var(--bg-color); display: flex; border-top: 1px solid #ccc; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--hint-color); font-size: 10px; text-decoration: none; cursor: pointer; }
+        .nav-item.active { color: var(--button-color); }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+
+        /* Формы */
+        .card { background: var(--bg-color); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        h3 { margin-top: 0; font-size: 18px; }
+        label { display: block; font-size: 12px; color: var(--hint-color); margin-bottom: 4px; }
+        input, select, textarea { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; background: var(--secondary-bg); color: var(--text-color); box-sizing: border-box; font-size: 16px; }
+        
+        .main-btn { background: var(--button-color); color: #fff; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        
+        .progress-container { background: #eee; border-radius: 10px; height: 10px; margin: 10px 0; overflow: hidden; }
+        .progress-bar { background: var(--button-color); height: 100%; width: 0%; transition: 0.3s; }
     </style>
 </head>
 <body>
-    <h3>Отчет со стройплощадки</h3>
-    
-    <label>Объект:</label>
-    <select id="project_select"></select>
-    <!-- Резервное поле, если список пуст -->
-    <input type="text" id="project_manual" placeholder="Имя объекта (если нет в списке)" style="display:none;">
 
-    <label>Ось / Отметка:</label>
-    <input type="text" id="axis" placeholder="Например: А-Б, 1-5 эт">
+<!-- Вкладка 1: Объекты (Главная) -->
+<div id="tab-objects" class="tab-content active">
+    <h3>🏗 Мои Объекты</h3>
+    <div id="objects-list">
+        <!-- Сюда бот подгрузит карточки объектов -->
+        <div class="card">
+            <strong>ЖК «Северное Сияние»</strong>
+            <div class="progress-container"><div class="progress-bar" style="width: 45%;"></div></div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                <span>Выполнено: 45%</span>
+                <span>Срок: до 20.06.24</span>
+            </div>
+            <button class="main-btn" style="margin-top:10px; padding:8px; font-size:12px;" onclick="openDailyReport('ЖК Северное Сияние')">Отчет за день</button>
+        </div>
+    </div>
+</div>
 
-    <label>Объем (м²):</label>
-    <input type="number" id="volume" placeholder="Введите число">
+<!-- Вкладка 2: Создать объект -->
+<div id="tab-create" class="tab-content">
+    <h3>➕ Новый объект</h3>
+    <div class="card">
+        <label>Название объекта</label>
+        <input type="text" id="obj_name" placeholder="Например: БЦ Кристалл">
+        <label>Адрес</label>
+        <input type="text" id="obj_address">
+        <label>Проектная площадь (м2)</label>
+        <input type="number" id="obj_sq_plan">
+        <label>Начало / Окончание по ГПР</label>
+        <div style="display:flex; gap:10px;">
+            <input type="date" id="obj_start">
+            <input type="date" id="obj_end">
+        </div>
+        <button class="main-btn" onclick="createNewObject()">Создать объект</button>
+    </div>
+</div>
 
-    <button id="main_button">ОТПРАВИТЬ ОТЧЕТ</button>
+<!-- Вкладка 3: Финансы -->
+<div id="tab-finance" class="tab-content">
+    <h3>💰 Финансы объекта</h3>
+    <div class="card">
+        <label>Объект</label>
+        <select id="fin_project"></select>
+        <label>Тип операции</label>
+        <select id="fin_type">
+            <option value="income">Приход (от заказчика)</option>
+            <option value="expense">Расход (материалы/логистика)</option>
+            <option value="crew_pay">Выплата бригаде</option>
+        </select>
+        <label>Сумма (руб.)</label>
+        <input type="number" id="fin_amount">
+        <button class="main-btn" onclick="sendFinance()">Записать операцию</button>
+    </div>
+</div>
 
-    <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
+<!-- Навигация -->
+<div class="nav-bar">
+    <div class="nav-item active" onclick="showTab('objects')"><i class="fa fa-building"></i>Объекты</div>
+    <div class="nav-item" onclick="showTab('create')"><i class="fa fa-plus-circle"></i>Создать</div>
+    <div class="nav-item" onclick="showTab('finance')"><i class="fa fa-wallet"></i>Финансы</div>
+</div>
 
-        // Заполняем список объектов из ссылки
-        const params = new URLSearchParams(window.location.search);
-        const projectsParam = params.get('projects');
-        const select = document.getElementById('project_select');
-        const manualInput = document.getElementById('project_manual');
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
 
-        if (projectsParam && projectsParam !== "") {
-            const projects = projectsParam.split(',');
-            projects.forEach(p => {
-                let opt = document.createElement('option');
-                opt.value = p; opt.innerHTML = p;
-                select.appendChild(opt);
-            });
-        } else {
-            select.style.display = 'none';
-            manualInput.style.display = 'block';
-        }
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
 
-        document.getElementById('main_button').addEventListener('click', () => {
-            let proj = select.style.display === 'none' ? manualInput.value : select.value;
-            let axis = document.getElementById('axis').value;
-            let vol = document.getElementById('volume').value;
+    // Логика создания объекта
+    function createNewObject() {
+        const data = {
+            action: 'create_object',
+            name: document.getElementById('obj_name').value,
+            address: document.getElementById('obj_address').value,
+            sq_plan: document.getElementById('obj_sq_plan').value,
+            start: document.getElementById('obj_start').value,
+            end: document.getElementById('obj_end').value
+        };
+        tg.sendData(JSON.stringify(data));
+    }
 
-            if(!proj || !axis || !vol) {
-                alert("Пожалуйста, заполните все поля!");
-                return;
+    // Логика отчета за день
+    function openDailyReport(objName) {
+        tg.showPopup({
+            title: 'Отчет: ' + objName,
+            message: 'Перейти к заполнению объемов и фото?',
+            buttons: [{id: 'ok', type: 'default', text: 'Да'}]
+        }, (id) => {
+            if(id === 'ok') {
+                const data = { action: 'daily_report_start', project: objName };
+                tg.sendData(JSON.stringify(data));
             }
-
-            let data = { project: proj, axis: axis, volume: vol };
-            tg.sendData(JSON.stringify(data)); // Отправка данных боту
         });
-    </script>
+    }
+
+    function sendFinance() {
+        const data = {
+            action: 'finance',
+            type: document.getElementById('fin_type').value,
+            amount: document.getElementById('fin_amount').value
+        };
+        tg.sendData(JSON.stringify(data));
+    }
+</script>
 </body>
 </html>
