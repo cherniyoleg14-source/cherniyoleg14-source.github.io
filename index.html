@@ -4,47 +4,314 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org"></script>
+    <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        :root { --dark: #1c1c1c; --primary: #2481cc; --accent: #f1c40f; --bg: #f4f7f9; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .header { background: var(--dark); width: 100%; padding: 40px 0; text-align: center; color: white; border-radius: 0 0 30px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .logo-main { font-size: 1.4rem; font-weight: 900; letter-spacing: 2px; }
-        .logo-sub { font-size: 0.7rem; color: var(--accent); letter-spacing: 1px; margin-top: 5px; text-transform: uppercase; }
-        .card { background: white; width: 90%; max-width: 400px; padding: 30px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); box-sizing: border-box; margin-top: -20px; }
-        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #dfe6e9; border-radius: 12px; font-size: 16px; box-sizing: border-box; background: #f9f9f9; transition: 0.3s; }
-        input:focus { border-color: var(--primary); outline: none; background: #fff; box-shadow: 0 0 0 4px rgba(36, 129, 204, 0.1); }
-        .btn-reg { background: var(--dark); color: white; border: none; width: 100%; padding: 18px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
-        .btn-reg:active { transform: scale(0.98); background: var(--primary); }
+        :root {
+            --dark: #121212;
+            --card-bg: #ffffff;
+            --accent: #f1c40f;
+            --primary: #2481cc;
+            --text: #2c3e50;
+            --border: #dfe6e9;
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: #f4f7f9; 
+            color: var(--text); 
+            margin: 0; 
+            padding: 0; 
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header { 
+            background: var(--dark); 
+            color: white; 
+            padding: 25px 15px; 
+            text-align: center; 
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .logo-lgc { font-weight: 900; font-size: 1.1rem; letter-spacing: 2px; color: #fff; }
+        .logo-sub { font-size: 0.65rem; color: var(--accent); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Контейнеры страниц */
+        .page { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Карточки и формы */
+        .card { 
+            background: var(--card-bg); 
+            border-radius: 20px; 
+            padding: 20px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        
+        h2 { font-size: 1.2rem; margin-bottom: 20px; border-left: 4px solid var(--primary); padding-left: 10px; }
+        label { display: block; font-size: 0.75rem; font-weight: 700; color: #7f8c8d; margin-bottom: 6px; text-transform: uppercase; }
+        
+        input, select, textarea { 
+            width: 100%; 
+            padding: 14px; 
+            margin-bottom: 15px; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            font-size: 1rem; 
+            box-sizing: border-box; 
+            background: #f9f9f9;
+        }
+        input:focus { border-color: var(--primary); outline: none; background: #fff; }
+
+        /* Блоки объекта */
+        .block-section { 
+            border: 1px dashed var(--primary); 
+            padding: 15px; 
+            border-radius: 12px; 
+            margin-bottom: 15px; 
+            background: #fcfcfc;
+        }
+        .block-title { font-weight: 800; color: var(--primary); margin-bottom: 10px; display: block; }
+
+        /* Кнопки */
+        .btn-submit { 
+            background: var(--dark); 
+            color: white; 
+            border: none; 
+            padding: 18px; 
+            width: 100%; 
+            border-radius: 15px; 
+            font-weight: 800; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .btn-submit:active { transform: scale(0.98); background: var(--primary); }
+
+        /* Навигация */
+        .nav-bar { 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            background: var(--dark); 
+            display: flex; 
+            height: 75px; 
+            padding-bottom: 10px;
+            z-index: 100;
+        }
+        .nav-item { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            color: #7f8c8d; 
+            font-size: 0.65rem; 
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .nav-item.active { color: var(--accent); }
+        .nav-item i { font-size: 1.5rem; margin-bottom: 5px; }
+
+        .required { color: #e74c3c; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo-main">LAM GROUP CONSTRUCTION</div>
-        <div class="logo-sub">Intelligent Building System</div>
-    </div>
+
+<div class="header">
+    <div class="logo-lgc">LAM GROUP CONSTRUCTION</div>
+    <div class="logo-sub">Intelligent Building System</div>
+</div>
+
+<!-- СТРАНИЦА 1: РЕГИСТРАЦИЯ -->
+<div id="page-reg" class="page">
     <div class="card">
-        <h2 style="margin-top:0; font-size: 1.2rem; color: var(--dark);">Регистрация ИТР</h2>
-        <input type="text" id="fio" placeholder="Фамилия Имя Отчество">
-        <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
-        <button class="btn-reg" onclick="register()">Войти в систему</button>
+        <h2>Регистрация ИТР</h2>
+        <label>ФИО полностью <span class="required">*</span></label>
+        <input type="text" id="reg_fio" placeholder="Иванов Иван Иванович">
+        
+        <label>Номер телефона <span class="required">*</span></label>
+        <input type="tel" id="reg_phone" placeholder="+7 (777) 000-00-00">
+        
+        <button class="btn-submit" onclick="sendRegistration()">Войти в систему</button>
     </div>
-    <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
-        function register() {
-            const fio = document.getElementById('fio').value;
-            const phone = document.getElementById('phone').value;
-            if (fio.length < 5 || phone.length < 10) {
-                tg.showAlert("Заполните данные корректно");
-                return;
-            }
-            tg.sendData(JSON.stringify({
-                action: 'registration',
-                fio: fio,
-                phone: phone,
-                user_id: tg.initDataUnsafe.user.id
-            }));
+</div>
+
+<!-- СТРАНИЦА 2: СОЗДАНИЕ ОБЪЕКТА -->
+<div id="page-create" class="page">
+    <div class="card">
+        <h2>Новый объект</h2>
+        
+        <label>Наименование объекта <span class="required">*</span></label>
+        <input type="text" id="obj_name" placeholder="Напр: ЖК Кристалл">
+        
+        <label>Адрес объекта <span class="required">*</span></label>
+        <input type="text" id="obj_address" placeholder="Улица, номер дома">
+        
+        <label>Ссылка 2ГИС <span class="required">*</span></label>
+        <input type="url" id="obj_2gis" placeholder="https://2gis.kz...">
+
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1">
+                <label>Проектная м² <span class="required">*</span></label>
+                <input type="number" id="sq_plan" placeholder="0">
+            </div>
+            <div style="flex:1">
+                <label>Фактическая м²</label>
+                <input type="number" id="sq_fact" placeholder="0">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1">
+                <label>Парапеты (п.м/м²)</label>
+                <input type="text" id="parapets" placeholder="п.м.">
+            </div>
+            <div style="flex:1">
+                <label>Откосы (п.м/м²)</label>
+                <input type="text" id="slopes" placeholder="п.м.">
+            </div>
+        </div>
+
+        <label>Сроки по ГПР / Договору <span class="required">*</span></label>
+        <div style="display:flex; gap:10px;">
+            <input type="date" id="date_start">
+            <input type="date" id="date_end">
+        </div>
+
+        <label>Количество блоков</label>
+        <select id="blocks_count" onchange="generateBlockFields()">
+            <option value="1">1 Блок</option>
+            <option value="2">2 Блока</option>
+            <option value="3">3 Блока</option>
+            <option value="4">4 Блока</option>
+            <option value="5">5 Блоков</option>
+            <option value="10">10 Блоков</option>
+        </select>
+
+        <div id="blocks_area"></div>
+
+        <button class="btn-submit" onclick="submitNewObject()">Создать карточку объекта</button>
+    </div>
+</div>
+
+<!-- СТРАНИЦА 3: ОБЪЕКТЫ (Заглушка для Пилота) -->
+<div id="page-list" class="page">
+    <h2>Ваши объекты</h2>
+    <div id="objects_container">
+        <p style="text-align:center; color:#999; margin-top:50px;">Список объектов подгружается...</p>
+    </div>
+</div>
+
+<!-- НИЖНЯЯ НАВИГАЦИЯ (видна везде кроме регистрации) -->
+<div class="nav-bar" id="bottom-nav" style="display:none;">
+    <div class="nav-item" onclick="showPage('list', this)"><i class="fas fa-city"></i>Объекты</div>
+    <div class="nav-item active" onclick="showPage('create', this)"><i class="fas fa-plus-circle"></i>Создать</div>
+    <div class="nav-item" onclick="showPage('finance', this)"><i class="fas fa-wallet"></i>Финансы</div>
+</div>
+
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
+
+    // Определяем, какую страницу показать при входе
+    // Для пилота: если в URL нет параметров, показываем регистрацию
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('registered') === 'true') {
+        showPage('create');
+        document.getElementById('bottom-nav').style.display = 'flex';
+    } else {
+        showPage('reg');
+    }
+
+    function showPage(pageId, navEl) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
+        
+        if (navEl) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            navEl.classList.add('active');
         }
-    </script>
+        tg.HapticFeedback.impactOccurred('light');
+    }
+
+    function generateBlockFields() {
+        const count = document.getElementById('blocks_count').value;
+        const area = document.getElementById('blocks_area');
+        area.innerHTML = '';
+        for (let i = 1; i <= count; i++) {
+            area.innerHTML += `
+                <div class="block-section">
+                    <span class="block-title">БЛОК №${i}</span>
+                    <label>Оси блока</label>
+                    <input type="text" class="blk-axis" placeholder="Напр: А-В / 1-10">
+                    <label>Этажи</label>
+                    <input type="text" class="blk-floors" placeholder="Напр: 1-15">
+                </div>
+            `;
+        }
+    }
+    // Генерируем 1 блок по умолчанию
+    generateBlockFields();
+
+    function sendRegistration() {
+        const fio = document.getElementById('reg_fio').value;
+        const phone = document.getElementById('reg_phone').value;
+
+        if (!fio || !phone) {
+            tg.showAlert("Заполните обязательные поля!");
+            return;
+        }
+
+        tg.sendData(JSON.stringify({
+            action: 'registration',
+            fio: fio,
+            phone: phone
+        }));
+    }
+
+    function submitNewObject() {
+        const name = document.getElementById('obj_name').value;
+        const address = document.getElementById('obj_address').value;
+        const gis = document.getElementById('obj_2gis').value;
+
+        if (!name || !address || !gis) {
+            tg.showAlert("Заполните поля со звездочкой!");
+            return;
+        }
+
+        // Собираем данные по блокам
+        const blocks = [];
+        document.querySelectorAll('.block-section').forEach((el, idx) => {
+            blocks.push({
+                num: idx + 1,
+                axis: el.querySelector('.blk-axis').value,
+                floors: el.querySelector('.blk-floors').value
+            });
+        });
+
+        const objData = {
+            action: 'create_full_object',
+            name: name,
+            address: address,
+            gis_link: gis,
+            sq_plan: document.getElementById('sq_plan').value,
+            sq_fact: document.getElementById('sq_fact').value,
+            parapets: document.getElementById('parapets').value,
+            slopes: document.getElementById('slopes').value,
+            start: document.getElementById('date_start').value,
+            end: document.getElementById('date_end').value,
+            blocks: blocks
+        };
+
+        tg.sendData(JSON.stringify(objData));
+    }
+</script>
 </body>
 </html>
