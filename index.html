@@ -3,75 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Подключаем скрипт Telegram -->
     <script src="https://telegram.org"></script>
     <style>
-        :root { --dark: #1c1c1c; --primary: #2481cc; --accent: #f1c40f; --bg: #f4f7f9; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
-        .header { background: var(--dark); padding: 25px; text-align: center; color: white; border-radius: 0 0 20px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .logo-main { font-weight: 900; font-size: 1.1rem; letter-spacing: 1.5px; }
-        .logo-sub { font-size: 0.65rem; color: var(--accent); margin-top: 5px; text-transform: uppercase; }
+        :root {
+            --dark: #121212;
+            --card-bg: #ffffff;
+            --accent: #f1c40f;
+            --primary: #2481cc;
+            --text: #2c3e50;
+            --border: #dfe6e9;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background: #f4f7f9; 
+            color: var(--text); 
+            margin: 0; 
+            padding: 0; 
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Шапка LamGroup */
+        .header { 
+            background: var(--dark); 
+            color: white; 
+            padding: 25px 15px; 
+            text-align: center; 
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .logo-lgc { font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; color: #fff; }
+        .logo-sub { font-size: 0.7rem; color: var(--accent); margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Основная карточка */
+        .container { padding: 20px; flex-grow: 1; }
+        .card { 
+            background: var(--card-bg); 
+            border-radius: 20px; 
+            padding: 25px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+        }
         
-        .container { padding: 20px; display: none; }
-        .container.active { display: block; }
+        h2 { font-size: 1.2rem; margin-top: 0; margin-bottom: 20px; border-left: 4px solid var(--primary); padding-left: 12px; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; color: #7f8c8d; margin-bottom: 8px; text-transform: uppercase; }
         
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        input, select { width: 100%; padding: 12px; margin: 8px 0 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-        .btn { background: var(--dark); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        input, select { 
+            width: 100%; 
+            padding: 14px; 
+            margin-bottom: 20px; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            font-size: 16px; 
+            box-sizing: border-box; 
+            background: #f9f9f9;
+            -webkit-appearance: none;
+        }
+        input:focus { border-color: var(--primary); outline: none; background: #fff; }
+
+        /* Кнопка */
+        .btn-main { 
+            background: var(--dark); 
+            color: white; 
+            border: none; 
+            padding: 18px; 
+            width: 100%; 
+            border-radius: 15px; 
+            font-weight: 800; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .btn-main:active { transform: scale(0.98); background: var(--primary); }
+
+        /* Скрытые элементы */
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="logo-main">LAM GROUP CONSTRUCTION</div>
+    <div class="logo-lgc">LAM GROUP CONSTRUCTION</div>
     <div class="logo-sub">Intelligent Building System</div>
 </div>
 
-<!-- ЭКРАН РЕГИСТРАЦИИ (ПО УМОЛЧАНИЮ) -->
-<div id="view-reg" class="container active">
-    <div class="card">
-        <h3 style="margin-top:0">Регистрация ИТР</h3>
-        <label>ФИО</label>
-        <input type="text" id="fio" placeholder="Введите Фамилию и Имя">
-        <label>Телефон</label>
-        <input type="tel" id="phone" placeholder="+7 (___) ___-__-__">
-        <button class="btn" onclick="sendReg()">ВОЙТИ В СИСТЕМУ</button>
-    </div>
-</div>
+<div class="container">
+    <div class="card" id="main-card">
+        <!-- Блок регистрации -->
+        <div id="section-reg">
+            <h2>Регистрация ИТР</h2>
+            <label>Ваше ФИО</label>
+            <input type="text" id="reg_fio" placeholder="Фамилия Имя Отчество">
+            <label>Номер телефона</label>
+            <input type="tel" id="reg_phone" placeholder="+7 (___) ___-__-__">
+            <button class="btn-main" onclick="sendRegistration()">Зарегистрироваться</button>
+        </div>
 
-<!-- ЭКРАН СОЗДАНИЯ ОБЪЕКТА (ОТКРЫВАЕТСЯ ДЛЯ VIP) -->
-<div id="view-create" class="container">
-    <div class="card">
-        <h3 style="margin-top:0">Новый объект</h3>
-        <input type="text" id="obj_name" placeholder="Название объекта">
-        <input type="text" id="obj_address" placeholder="Адрес">
-        <input type="number" id="obj_sq" placeholder="Проектная площадь м2">
-        <button class="btn" onclick="sendObj()">СОЗДАТЬ ОБЪЕКТ</button>
+        <!-- Блок создания объекта (показывается VIP) -->
+        <div id="section-create" class="hidden">
+            <h2>Новый объект</h2>
+            <label>Название объекта</label>
+            <input type="text" id="obj_name" placeholder="ЖК 'Royal'">
+            <label>Адрес</label>
+            <input type="text" id="obj_address" placeholder="г. Алматы, пр. Достык">
+            <button class="btn-main" onclick="sendNewObject()">Создать карточку</button>
+        </div>
     </div>
 </div>
 
 <script>
     let tg = window.Telegram.WebApp;
-    tg.expand();
+    tg.expand(); // Расширяем окно
+    tg.ready();  // Сообщаем Telegram, что приложение готово
 
-    // Логика: если в ссылке есть registered=true, показываем создание объекта
+    // Проверяем, зарегистрирован ли пользователь (через URL из бота)
     const params = new URLSearchParams(window.location.search);
     if (params.get('registered') === 'true') {
-        document.getElementById('view-reg').classList.remove('active');
-        document.getElementById('view-create').classList.add('active');
+        document.getElementById('section-reg').classList.add('hidden');
+        document.getElementById('section-create').classList.remove('hidden');
     }
 
-    function sendReg() {
-        const fio = document.getElementById('fio').value;
-        const phone = document.getElementById('phone').value;
-        if(fio.length < 3) return tg.showAlert("Заполните ФИО");
-        tg.sendData(JSON.stringify({action: 'registration', fio: fio, phone: phone}));
+    // Функция отправки регистрации
+    function sendRegistration() {
+        const fio = document.getElementById('reg_fio').value;
+        const phone = document.getElementById('reg_phone').value;
+
+        if (fio.length < 3) {
+            tg.showAlert("Пожалуйста, введите корректное ФИО");
+            return;
+        }
+
+        tg.sendData(JSON.stringify({
+            action: 'registration',
+            fio: fio,
+            phone: phone
+        }));
     }
 
-    function sendObj() {
+    // Функция отправки нового объекта
+    function sendNewObject() {
         const name = document.getElementById('obj_name').value;
-        if(name.length < 2) return tg.showAlert("Заполните название");
-        tg.sendData(JSON.stringify({action: 'create_full_object', name: name}));
+        const addr = document.getElementById('obj_address').value;
+
+        if (name.length < 2) {
+            tg.showAlert("Введите название объекта");
+            return;
+        }
+
+        tg.sendData(JSON.stringify({
+            action: 'create_full_object',
+            name: name,
+            address: addr
+        }));
     }
 </script>
+
 </body>
 </html>
