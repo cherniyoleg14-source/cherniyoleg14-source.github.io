@@ -19,15 +19,13 @@
         <small style="color: #f1c40f;">INTELLIGENT SYSTEM</small>
     </div>
 
-    <!-- ФОРМА 1: РЕГИСТРАЦИЯ -->
     <div id="view_reg" class="card">
         <h3>Регистрация ИТР</h3>
         <input type="text" id="fio" placeholder="Ваше ФИО">
-        <input type="tel" id="phone" placeholder="Ваш телефон">
+        <input type="tel" id="phone" placeholder="Телефон">
         <button class="btn" onclick="send('registration')">ВОЙТИ</button>
     </div>
 
-    <!-- ФОРМА 2: ОБЪЕКТ -->
     <div id="view_create" class="card hidden">
         <h3>Новый объект</h3>
         <input type="text" id="obj_name" placeholder="Название объекта">
@@ -40,7 +38,6 @@
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Проверяем метку в ссылке
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('reg') === '1') {
             document.getElementById('view_reg').classList.add('hidden');
@@ -48,18 +45,17 @@
         }
 
         function send(act) {
-            let result = { action: act };
+            let res = { action: act };
             if (act === 'registration') {
-                result.fio = document.getElementById('fio').value;
-                result.phone = document.getElementById('phone').value;
+                res.fio = document.getElementById('fio').value;
+                res.phone = document.getElementById('phone').value;
             } else {
-                result.name = document.getElementById('obj_name').value;
-                result.addr = document.getElementById('obj_addr').value;
-                result.sq = document.getElementById('obj_sq').value;
+                res.name = document.getElementById('obj_name').value;
+                res.addr = document.getElementById('obj_addr').value;
+                res.sq = document.getElementById('obj_sq').value;
             }
-
-            // Главная команда
-            tg.sendData(JSON.stringify(result));
+            tg.sendData(JSON.stringify(res));
+            setTimeout(() => { tg.close(); }, 200); // Закрываем окно после отправки
         }
     </script>
 </body>
