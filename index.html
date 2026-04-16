@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://telegram.org"></script>
+    <link rel="stylesheet" href="https://cloudflare.com">
+    <style>
+        :root { --dark: #1c1c1c; --accent: #f1c40f; --bg: #f4f7f9; --primary: #2481cc; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
+        .header { background: var(--dark); padding: 20px; color: white; text-align: center; border-radius: 0 0 20px 20px; }
+        
+        /* Вкладки */
+        .tab-content { display: none; padding: 20px; animation: fadeIn 0.3s; }
+        .active { display: block !important; }
+        
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        .btn { background: var(--dark); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
+
+        /* Нижнее меню */
+        .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #ddd; height: 65px; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 10px; cursor: pointer; }
+        .nav-item.active-nav { color: var(--primary); }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <strong>LAM GROUP CONSTRUCTION</strong><br>
+    <small style="color:var(--accent)">IBS DASHBOARD</small>
+</div>
+
+<!-- ВКЛАДКА 1: ОБЪЕКТЫ -->
+<div id="tab-objects" class="tab-content active">
+    <h3>🏗 Мои Объекты</h3>
+    <div class="card">
+        <strong>Объект №1</strong><br>
+        <small>Статус: В работе</small>
+    </div>
+    <p style="text-align:center; color:#999; font-size:12px;">Список подгружается из таблицы...</p>
+</div>
+
+<!-- ВКЛАДКА 2: СОЗДАТЬ -->
+<div id="tab-create" class="tab-content">
+    <h3>➕ Новый объект</h3>
+    <div class="card">
+        <input type="text" id="obj-name" placeholder="Название объекта">
+        <input type="text" id="obj-addr" placeholder="Адрес">
+        <input type="number" id="obj-sq" placeholder="Площадь м2">
+        <button class="btn" onclick="sendData()">СОЗДАТЬ КАРТОЧКУ</button>
+    </div>
+</div>
+
+<!-- ВКЛАДКА 3: ФИНАНСЫ -->
+<div id="tab-finance" class="tab-content">
+    <h3>💰 Финансы</h3>
+    <div class="card">
+        <p>Общая сумма выплат: 0 ₸</p>
+        <button class="btn" style="background:#27ae60">ОТЧЕТ ПО ВЫПЛАТАМ</button>
+    </div>
+</div>
+
+<!-- НАВИГАЦИЯ -->
+<div class="nav">
+    <div class="nav-item active-nav" onclick="showTab('objects', this)"><i class="fa fa-city"></i>ОБЪЕКТЫ</div>
+    <div class="nav-item" onclick="showTab('create', this)"><i class="fa fa-plus-circle"></i>СОЗДАТЬ</div>
+    <div class="nav-item" onclick="showTab('finance', this)"><i class="fa fa-wallet"></i>ФИНАНСЫ</div>
+</div>
+
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
+
+    function showTab(id, el) {
+        // Скрыть все вкладки
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        // Показать нужную
+        document.getElementById('tab-' + id).classList.add('active');
+        
+        // Обновить иконки
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
+        el.classList.add('active-nav');
+        
+        tg.HapticFeedback.impactOccurred('light'); // Виброотклик
+    }
+
+    function sendData() {
+        const name = document.getElementById('obj-name').value;
+        const addr = document.getElementById('obj-addr').value;
+        const sq = document.getElementById('obj-sq').value;
+        
+        if(!name) return alert("Введите название");
+
+        const data = { action: 'obj', name: name, addr: addr, sq: sq };
+        tg.sendData(JSON.stringify(data));
+    }
+</script>
+</body>
+</html>
