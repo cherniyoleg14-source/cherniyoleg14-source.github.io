@@ -7,80 +7,64 @@
     <style>
         :root { --dark: #1c1c1c; --accent: #f1c40f; --bg: #f4f7f9; }
         body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; text-align: center; }
-        .header { background: var(--dark); padding: 25px; color: white; border-radius: 0 0 20px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .logo-main { font-weight: 900; font-size: 1.1rem; letter-spacing: 1.5px; }
-        .logo-sub { font-size: 0.65rem; color: var(--accent); margin-top: 5px; text-transform: uppercase; }
-        
-        /* Стили карточек */
-        .card { background: white; padding: 20px; border-radius: 15px; margin: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        input { width: 100%; padding: 12px; margin: 8px 0 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-        .btn { background: var(--dark); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
-        
-        /* Управление видимостью */
-        .hidden { display: none !important; }
+        .header { background: var(--dark); padding: 20px; color: white; border-radius: 0 0 20px 20px; }
+        .card { background: white; padding: 20px; border-radius: 15px; margin: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); display: none; }
+        .active { display: block !important; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        .btn { background: var(--dark); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
+    <div class="header">
+        <strong>LAM GROUP CONSTRUCTION</strong><br>
+        <small id="debug-mode" style="color: var(--accent);">INITIALIZING...</small>
+    </div>
 
-<div class="header">
-    <div class="logo-main">LAM GROUP CONSTRUCTION</div>
-    <div class="logo-sub">Intelligent Building System</div>
-</div>
+    <div id="view-reg" class="card">
+        <h3>Регистрация ИТР</h3>
+        <input type="text" id="fio" placeholder="Ваше ФИО">
+        <input type="tel" id="phone" placeholder="Ваш телефон">
+        <button class="btn" onclick="send('registration')">ЗАРЕГИСТРИРОВАТЬСЯ</button>
+    </div>
 
-<!-- ФОРМА 1: РЕГИСТРАЦИЯ (Показываем сразу, чтобы не было белого экрана) -->
-<div id="reg-view" class="card">
-    <h3 style="margin-top:0">Регистрация ИТР</h3>
-    <input type="text" id="reg-fio" placeholder="Ваше ФИО">
-    <input type="tel" id="reg-phone" placeholder="Ваш телефон">
-    <button class="btn" onclick="sendData('registration')">ЗАРЕГИСТРИРОВАТЬСЯ</button>
-</div>
+    <div id="view-create" class="card">
+        <h3>Новый объект</h3>
+        <input type="text" id="obj-name" placeholder="Название объекта">
+        <input type="text" id="obj-addr" placeholder="Адрес">
+        <input type="number" id="obj-sq" placeholder="Площадь м2">
+        <button class="btn" onclick="send('create_object')">СОЗДАТЬ ОБЪЕКТ</button>
+    </div>
 
-<!-- ФОРМА 2: СОЗДАНИЕ ОБЪЕКТА -->
-<div id="create-view" class="card hidden">
-    <h3 id="title-mode">Новый объект</h3>
-    <input type="text" id="obj-name" placeholder="Название объекта">
-    <input type="text" id="obj-addr" placeholder="Адрес">
-    <input type="number" id="obj-sq" placeholder="Площадь м2">
-    <button class="btn" onclick="sendData('create_object')">СОЗДАТЬ ОБЪЕКТ</button>
-</div>
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
 
-<script>
-    let tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.ready();
+        const params = new URLSearchParams(window.location.search);
+        const mode = params.get('reg');
+        document.getElementById('debug-mode').innerText = "MODE: " + mode;
 
-    // Простая и надежная логика переключения экранов
-    const params = new URLSearchParams(window.location.search);
-    const mode = params.get('reg');
-
-    if (mode === '1' || mode === '2') {
-        // Если Руководитель (1) или ИТР в базе (2)
-        document.getElementById('reg-view').classList.add('hidden');
-        document.getElementById('create-view').classList.remove('hidden');
-        if (mode === '2') document.getElementById('title-mode').innerText = "Подать отчет";
-    }
-
-    function sendData(type) {
-        let data = { action: type };
-        if (type === 'registration') {
-            data.fio = document.getElementById('reg-fio').value;
-            data.phone = document.getElementById('reg-phone').value;
+        if (mode === '1') {
+            document.getElementById('view-create').classList.add('active');
+            document.getElementById('view-reg').style.display = 'none';
         } else {
-            data.name = document.getElementById('obj-name').value;
-            data.addr = document.getElementById('obj-addr').value;
-            data.sq = document.getElementById('obj-sq').value;
+            document.getElementById('view-reg').classList.add('active');
+            document.getElementById('view-create').style.display = 'none';
         }
 
-        if (!data.fio && !data.name) {
-            tg.showAlert("Пожалуйста, заполните поля");
-            return;
+        function send(act) {
+            let data = { action: act };
+            if (act === 'registration') {
+                data.fio = document.getElementById('fio').value;
+                data.phone = document.getElementById('phone').value;
+            } else {
+                data.name = document.getElementById('obj-name').value;
+                data.addr = document.getElementById('obj-addr').value;
+                data.sq = document.getElementById('obj-sq').value;
+            }
+            tg.sendData(JSON.stringify(data));
+            tg.close();
         }
-
-        // Отправка данных боту
-        tg.sendData(JSON.stringify(data));
-        // Закрываем приложение
-        tg.close();
-    }
-</script>
+    </script>
 </body>
 </html>
