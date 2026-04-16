@@ -1,86 +1,69 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org"></script>
     <style>
-        :root { --dark: #1c1c1c; --accent: #f1c40f; --bg: #f4f7f9; --primary: #2481cc; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; text-align: center; }
-        .header { background: var(--dark); padding: 25px; color: white; border-radius: 0 0 20px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .logo-main { font-weight: 900; font-size: 1.1rem; letter-spacing: 1.5px; }
-        .logo-sub { font-size: 0.65rem; color: var(--accent); margin-top: 5px; text-transform: uppercase; }
-        
-        .container { padding: 20px; display: none; } /* Скрыто по умолчанию */
-        .active { display: block !important; } /* Класс для показа */
-        
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-        .btn { background: var(--dark); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        body { font-family: sans-serif; background: #f4f7f9; margin: 0; padding: 0; text-align: center; }
+        .header { background: #1c1c1c; padding: 25px; color: white; border-radius: 0 0 20px 20px; }
+        .card { background: white; padding: 20px; border-radius: 15px; margin: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        .btn { background: #1c1c1c; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-
-<div class="header">
-    <div class="logo-main">LAM GROUP CONSTRUCTION</div>
-    <div class="logo-sub">Intelligent Building System</div>
-</div>
-
-<!-- ЭКРАН 1: РЕГИСТРАЦИЯ -->
-<div id="view-reg" class="container">
-    <div class="card">
-        <h3 style="margin-top:0">Регистрация ИТР</h3>
-        <input type="text" id="fio" placeholder="Ваше ФИО">
-        <input type="tel" id="phone" placeholder="Ваш телефон">
-        <button class="btn" onclick="send('reg')">ЗАРЕГИСТРИРОВАТЬСЯ</button>
+    <div class="header">
+        <strong>LAM GROUP CONSTRUCTION</strong><br>
+        <small style="color: #f1c40f;">INTELLIGENT SYSTEM</small>
     </div>
-</div>
 
-<!-- ЭКРАН 2: СОЗДАНИЕ ОБЪЕКТА -->
-<div id="view-create" class="container">
-    <div class="card">
-        <h3 id="title-mode">Новый объект</h3>
+    <!-- БЛОК 1: ДЛЯ ИТР (Виден всегда) -->
+    <div id="view-reg" class="card">
+        <h3>Регистрация сотрудника</h3>
+        <input type="text" id="fio" placeholder="Ваше ФИО">
+        <input type="tel" id="phone" placeholder="Телефон">
+        <button class="btn" onclick="sendData('registration')">ОТПРАВИТЬ ДАННЫЕ</button>
+    </div>
+
+    <!-- БЛОК 2: ДЛЯ РУКОВОДИТЕЛЯ (По умолчанию скрыт, но включается меткой) -->
+    <div id="view-create" class="card hidden">
+        <h3>Новый объект</h3>
         <input type="text" id="obj-name" placeholder="Название объекта">
         <input type="text" id="obj-addr" placeholder="Адрес">
-        <input type="number" id="obj-sq" placeholder="Площадь м2">
-        <button class="btn" onclick="send('obj')">СОЗДАТЬ ОБЪЕКТ</button>
+        <button class="btn" onclick="sendData('create_full_object')">СОЗДАТЬ ОБЪЕКТ</button>
     </div>
-</div>
 
-<script>
-    let tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.ready(); // Критически важно для Telegram
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
 
-    // Простая и надежная логика переключения
-    const params = new URLSearchParams(window.location.search);
-    const mode = params.get('reg');
-
-    if (mode === '1' || mode === '2') {
-        // Если Руководитель или ИТР уже в базе
-        document.getElementById('view-create').classList.add('active');
-        if(mode === '2') document.getElementById('title-mode').innerText = "Подать отчет";
-    } else {
-        // Если новый пользователь
-        document.getElementById('view-reg').classList.add('active');
-    }
-
-    function send(type) {
-        let data = { action: type === 'reg' ? 'registration' : 'create_full_object' };
-        if(type === 'reg') {
-            data.fio = document.getElementById('fio').value;
-            data.phone = document.getElementById('phone').value;
-        } else {
-            data.name = document.getElementById('obj-name').value;
-            data.addr = document.getElementById('obj-addr').value;
-            data.sq = document.getElementById('obj-sq').value;
+        // Простейшая проверка: если в ссылке есть reg=1, показываем форму объекта
+        if (window.location.search.includes('reg=1')) {
+            document.getElementById('view-reg').style.display = 'none';
+            document.getElementById('view-create').classList.remove('hidden');
         }
-        
-        if(!data.fio && !data.name) return alert("Заполните поля");
-        
-        tg.sendData(JSON.stringify(data));
-        tg.close(); // Закрываем окно после отправки
-    }
-</script>
+
+        function sendData(action) {
+            let result = { action: action };
+            if (action === 'registration') {
+                result.fio = document.getElementById('fio').value;
+                result.phone = document.getElementById('phone').value;
+            } else {
+                result.name = document.getElementById('obj-name').value;
+                result.addr = document.getElementById('obj-addr').value;
+            }
+
+            if (!result.fio && !result.name) {
+                alert("Заполните поля!");
+                return;
+            }
+
+            tg.sendData(JSON.stringify(result));
+            tg.close();
+        }
+    </script>
 </body>
 </html>
