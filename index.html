@@ -1,75 +1,57 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org"></script>
     <style>
-        :root { --dark: #1c1c1c; --primary: #2481cc; --accent: #f1c40f; --bg: #f4f7f9; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
-        .header { background: var(--dark); padding: 25px; text-align: center; color: white; border-radius: 0 0 20px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .logo-main { font-weight: 900; font-size: 1.1rem; letter-spacing: 1.5px; }
-        .logo-sub { font-size: 0.65rem; color: var(--accent); margin-top: 5px; text-transform: uppercase; }
-        .container { padding: 20px; display: none; }
-        .container.active { display: block; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        input { width: 100%; padding: 12px; margin: 8px 0 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-        .btn { background: var(--dark); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        body { font-family: sans-serif; background: #f4f7f9; margin: 0; padding: 0; text-align: center; }
+        .header { background: #1c1c1c; padding: 25px; color: white; border-radius: 0 0 20px 20px; }
+        .card { background: white; padding: 20px; border-radius: 15px; margin: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        .btn { background: #1c1c1c; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        /* Показываем формы СРАЗУ, чтобы не было белого экрана */
+        #reg-view, #create-view { display: block; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
+    <div class="header">
+        <strong>LAM GROUP CONSTRUCTION</strong><br>
+        <small style="color: #f1c40f;">INTELLIGENT SYSTEM</small>
+    </div>
 
-<div class="header">
-    <div class="logo-main">LAM GROUP CONSTRUCTION</div>
-    <div class="logo-sub">Intelligent Building System</div>
-</div>
-
-<!-- ЭКРАН 1: РЕГИСТРАЦИЯ -->
-<div id="view-reg" class="container">
-    <div class="card">
-        <h3 style="margin-top:0">Регистрация ИТР</h3>
+    <!-- Форма регистрации (видна всем по умолчанию) -->
+    <div id="reg-view" class="card">
+        <h3>Регистрация ИТР</h3>
         <input type="text" id="fio" placeholder="Ваше ФИО">
         <input type="tel" id="phone" placeholder="Ваш телефон">
-        <button class="btn" onclick="sendData('registration')">ЗАРЕГИСТРИРОВАТЬСЯ</button>
+        <button class="btn" onclick="sendData('registration')">ВОЙТИ</button>
     </div>
-</div>
 
-<!-- ЭКРАН 2: СОЗДАНИЕ ОБЪЕКТА -->
-<div id="view-create" class="container">
-    <div class="card">
-        <h3 style="margin-top:0">Новый объект</h3>
+    <!-- Форма создания (скрыта, если нет спец.метки) -->
+    <div id="create-view" class="card hidden">
+        <h3>Новый объект</h3>
         <input type="text" id="obj_name" placeholder="Название объекта">
-        <input type="text" id="obj_address" placeholder="Адрес">
-        <button class="btn" onclick="sendData('create_full_object')">СОЗДАТЬ ОБЪЕКТ</button>
+        <button class="btn" onclick="sendData('create_full_object')">СОЗДАТЬ</button>
     </div>
-</div>
 
-<script>
-    let tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
 
-    // Логика: если в ссылке есть registered=true, показываем создание объекта
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('registered') === 'true') {
-        document.getElementById('view-create').classList.add('active');
-    } else {
-        document.getElementById('view-reg').classList.add('active');
-    }
-
-    function sendData(action) {
-        let data = { action: action };
-        if (action === 'registration') {
-            data.fio = document.getElementById('fio').value;
-            data.phone = document.getElementById('phone').value;
-        } else {
-            data.name = document.getElementById('obj_name').value;
-            data.address = document.getElementById('obj_address').value;
+        // Если бот прислал ссылку с пометкой ?reg=1, меняем формы
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('registered') === 'true') {
+            document.getElementById('reg-view').classList.add('hidden');
+            document.getElementById('create-view').classList.remove('hidden');
         }
-        
-        // ВАЖНО: tg.sendData работает ТОЛЬКО если бот запущен через клавиатурную кнопку
-        tg.sendData(JSON.stringify(data));
-    }
-</script>
+
+        function sendData(act) {
+            const val = act === 'registration' ? document.getElementById('fio').value : document.getElementById('obj_name').value;
+            if(!val) return alert("Заполните поле");
+            tg.sendData(JSON.stringify({action: act, name: val}));
+        }
+    </script>
 </body>
 </html>
