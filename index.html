@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org"></script>
     <style>
-        body { font-family: sans-serif; background: #f4f7f9; margin: 0; padding: 0; text-align: center; }
+        body { font-family: sans-serif; background: #f4f7f9; margin: 0; text-align: center; }
         .header { background: #1c1c1c; padding: 25px; color: white; border-radius: 0 0 20px 20px; }
         .card { background: white; padding: 20px; border-radius: 15px; margin: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
         .btn { background: #1c1c1c; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        /* Показываем формы СРАЗУ, чтобы не было белого экрана */
-        #reg-view, #create-view { display: block; }
-        .hidden { display: none !important; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -21,36 +19,47 @@
         <small style="color: #f1c40f;">INTELLIGENT SYSTEM</small>
     </div>
 
-    <!-- Форма регистрации (видна всем по умолчанию) -->
-    <div id="reg-view" class="card">
+    <!-- ФОРМА 1: РЕГИСТРАЦИЯ -->
+    <div id="view_reg" class="card">
         <h3>Регистрация ИТР</h3>
         <input type="text" id="fio" placeholder="Ваше ФИО">
         <input type="tel" id="phone" placeholder="Ваш телефон">
-        <button class="btn" onclick="sendData('registration')">ВОЙТИ</button>
+        <button class="btn" onclick="send('registration')">ВОЙТИ</button>
     </div>
 
-    <!-- Форма создания (скрыта, если нет спец.метки) -->
-    <div id="create-view" class="card hidden">
+    <!-- ФОРМА 2: ОБЪЕКТ -->
+    <div id="view_create" class="card hidden">
         <h3>Новый объект</h3>
         <input type="text" id="obj_name" placeholder="Название объекта">
-        <button class="btn" onclick="sendData('create_full_object')">СОЗДАТЬ</button>
+        <input type="text" id="obj_addr" placeholder="Адрес">
+        <input type="number" id="obj_sq" placeholder="Площадь м2">
+        <button class="btn" onclick="send('create_object')">СОЗДАТЬ</button>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Если бот прислал ссылку с пометкой ?reg=1, меняем формы
+        // Проверяем метку в ссылке
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('registered') === 'true') {
-            document.getElementById('reg-view').classList.add('hidden');
-            document.getElementById('create-view').classList.remove('hidden');
+        if (urlParams.get('reg') === '1') {
+            document.getElementById('view_reg').classList.add('hidden');
+            document.getElementById('view_create').classList.remove('hidden');
         }
 
-        function sendData(act) {
-            const val = act === 'registration' ? document.getElementById('fio').value : document.getElementById('obj_name').value;
-            if(!val) return alert("Заполните поле");
-            tg.sendData(JSON.stringify({action: act, name: val}));
+        function send(act) {
+            let result = { action: act };
+            if (act === 'registration') {
+                result.fio = document.getElementById('fio').value;
+                result.phone = document.getElementById('phone').value;
+            } else {
+                result.name = document.getElementById('obj_name').value;
+                result.addr = document.getElementById('obj_addr').value;
+                result.sq = document.getElementById('obj_sq').value;
+            }
+
+            // Главная команда
+            tg.sendData(JSON.stringify(result));
         }
     </script>
 </body>
