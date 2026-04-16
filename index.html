@@ -4,140 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org"></script>
-    <link rel="stylesheet" href="https://cloudflare.com">
     <style>
-        :root {
-            --dark: #121212;
-            --card-bg: #ffffff;
-            --accent: #f1c40f;
-            --primary: #2481cc;
-            --text: #2c3e50;
-            --border: #dfe6e9;
-        }
-
-        body { 
-            font-family: -apple-system, system-ui, sans-serif; 
-            background: #f4f7f9; 
-            color: var(--text); 
-            margin: 0; padding: 0; 
-            padding-bottom: 30px;
-        }
-
-        /* Шапка LamGroup */
-        .header { 
-            background: var(--dark); color: white; 
-            padding: 25px 15px; text-align: center; 
-            border-radius: 0 0 25px 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .logo-lgc { font-weight: 900; font-size: 1.2rem; letter-spacing: 2px; color: #fff; }
-        .logo-sub { font-size: 0.7rem; color: var(--accent); margin-top: 5px; text-transform: uppercase; }
-
-        .container { padding: 15px; }
-        .card { 
-            background: var(--card-bg); border-radius: 20px; 
-            padding: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-        
-        h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 15px; border-left: 4px solid var(--primary); padding-left: 12px; }
-        label { display: block; font-size: 0.75rem; font-weight: 700; color: #7f8c8d; margin-bottom: 6px; text-transform: uppercase; }
-        
-        input, select { 
-            width: 100%; padding: 12px; margin-bottom: 15px; 
-            border: 1px solid var(--border); border-radius: 10px; 
-            font-size: 16px; box-sizing: border-box; background: #f9f9f9;
-        }
-        input:focus { border-color: var(--primary); outline: none; background: #fff; }
-
-        /* Стили блоков */
-        .block-unit {
-            border: 1px dashed var(--primary);
-            padding: 15px; border-radius: 12px;
-            margin-bottom: 15px; background: #fcfcfc;
-        }
-
-        .btn-main { 
-            background: var(--dark); color: white; border: none; 
-            padding: 18px; width: 100%; border-radius: 15px; 
-            font-weight: 800; font-size: 1rem; cursor: pointer; 
-            text-transform: uppercase; letter-spacing: 1px;
-        }
-        .btn-main:active { transform: scale(0.98); background: var(--primary); }
-        .hidden { display: none; }
-        .required { color: #e74c3c; }
+        :root { --dark: #1c1c1c; --primary: #2481cc; --accent: #f1c40f; --bg: #f4f7f9; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
+        .header { background: var(--dark); padding: 25px; text-align: center; color: white; border-radius: 0 0 20px 20px; }
+        .logo-main { font-weight: 900; font-size: 1.1rem; letter-spacing: 1.5px; }
+        .logo-sub { font-size: 0.65rem; color: var(--accent); margin-top: 5px; text-transform: uppercase; }
+        .container { padding: 20px; display: none; }
+        .container.active { display: block; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        input, select { width: 100%; padding: 12px; margin: 8px 0 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
+        .btn { background: var(--dark); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .block-unit { border: 1px dashed var(--primary); padding: 10px; margin-bottom: 10px; border-radius: 8px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="logo-lgc">LAM GROUP CONSTRUCTION</div>
+    <div class="logo-main">LAM GROUP CONSTRUCTION</div>
     <div class="logo-sub">Intelligent Building System</div>
 </div>
 
-<div class="container">
-    <div class="card" id="section-reg">
-        <h2>Регистрация ИТР</h2>
-        <label>ФИО полностью <span class="required">*</span></label>
-        <input type="text" id="reg_fio" placeholder="Фамилия Имя Отчество">
-        <label>Номер телефона <span class="required">*</span></label>
-        <input type="tel" id="reg_phone" placeholder="+7 (___) ___-__-__">
-        <button class="btn-main" onclick="sendRegistration()">Войти в систему</button>
+<div id="view-reg" class="container">
+    <div class="card">
+        <h3 style="margin-top:0">Регистрация ИТР</h3>
+        <input type="text" id="fio" placeholder="Ваше ФИО">
+        <input type="tel" id="phone" placeholder="Ваш телефон">
+        <button class="btn" onclick="sendReg()">ЗАРЕГИСТРИРОВАТЬСЯ</button>
     </div>
+</div>
 
-    <div class="card hidden" id="section-create">
-        <h2>Новая карточка объекта</h2>
+<div id="view-create" class="container">
+    <div class="card">
+        <h3 style="margin-top:0">Новый объект</h3>
+        <input type="text" id="obj_name" placeholder="Название объекта">
+        <input type="text" id="obj_address" placeholder="Адрес">
+        <input type="number" id="obj_sq" placeholder="Площадь м2">
         
-        <label>Наименование объекта <span class="required">*</span></label>
-        <input type="text" id="obj_name" placeholder="ЖК 'Royal'">
-        
-        <label>Адрес объекта <span class="required">*</span></label>
-        <input type="text" id="obj_address" placeholder="Город, улица, дом">
-        
-        <label>Ссылка 2ГИС <span class="required">*</span></label>
-        <input type="url" id="obj_2gis" placeholder="https://2gis.kz...">
-
-        <div style="display:flex; gap:10px;">
-            <div style="flex:1">
-                <label>Проектная м² <span class="required">*</span></label>
-                <input type="number" id="sq_plan" placeholder="0">
-            </div>
-            <div style="flex:1">
-                <label>Фактическая м²</label>
-                <input type="number" id="sq_fact" placeholder="0">
-            </div>
-        </div>
-
-        <div style="display:flex; gap:10px;">
-            <div style="flex:1">
-                <label>Парапеты (п.м/м²)</label>
-                <input type="text" id="parapets" placeholder="м2">
-            </div>
-            <div style="flex:1">
-                <label>Откосы (п.м/м²)</label>
-                <input type="text" id="slopes" placeholder="м2">
-            </div>
-        </div>
-
-        <label>Сроки по ГПР <span class="required">*</span></label>
-        <div style="display:flex; gap:10px;">
-            <input type="date" id="date_start">
-            <input type="date" id="date_end">
-        </div>
-
-        <label style="margin-top:10px;">Количество блоков</label>
-        <select id="blocks_count" onchange="updateBlocks()">
+        <label style="font-size:12px">Количество блоков:</label>
+        <select id="blocks_count" onchange="generateBlocks()">
             <option value="1">1 Блок</option>
             <option value="2">2 Блока</option>
             <option value="3">3 Блока</option>
-            <option value="4">4 Блока</option>
-            <option value="5">5 Блоков</option>
-            <option value="10">10 Блоков</option>
         </select>
-
-        <div id="blocks-container"></div>
-
-        <button class="btn-main" style="background:#27ae60; margin-top:10px;" onclick="sendNewObject()">СОЗДАТЬ ОБЪЕКТ</button>
+        <div id="blocks-area"></div>
+        
+        <button class="btn" onclick="sendObj()">СОЗДАТЬ ОБЪЕКТ</button>
     </div>
 </div>
 
@@ -146,69 +58,46 @@
     tg.expand();
     tg.ready();
 
-    // Проверка роли через URL
+    // Логика переключения экранов
     const params = new URLSearchParams(window.location.search);
     if (params.get('registered') === 'true') {
-        document.getElementById('section-reg').classList.add('hidden');
-        document.getElementById('section-create').classList.remove('hidden');
-        updateBlocks(); // Генерируем 1 блок сразу
+        document.getElementById('view-create').classList.add('active');
+        generateBlocks();
+    } else {
+        document.getElementById('view-reg').classList.add('active');
     }
 
-    function updateBlocks() {
+    function generateBlocks() {
         const count = document.getElementById('blocks_count').value;
-        const container = document.getElementById('blocks-container');
-        container.innerHTML = '';
-        for (let i = 1; i <= count; i++) {
-            container.innerHTML += `
-                <div class="block-unit">
-                    <span style="font-weight:800; color:var(--primary); font-size:0.8rem;">БЛОК №${i}</span>
-                    <input type="text" class="blk-axis" placeholder="Оси (напр: А-Б / 1-20)" style="margin-top:8px; margin-bottom:8px;">
-                    <input type="text" class="blk-floors" placeholder="Этажи (напр: 1-15)">
-                </div>`;
+        const area = document.getElementById('blocks-area');
+        area.innerHTML = '';
+        for(let i=1; i<=count; i++) {
+            area.innerHTML += `<div class="block-unit">Блок ${i}: <input type="text" class="b-axis" placeholder="Оси"></div>`;
         }
     }
 
-    function sendRegistration() {
-        const fio = document.getElementById('reg_fio').value;
-        const phone = document.getElementById('reg_phone').value;
-        if (fio.length < 3) return tg.showAlert("Введите ФИО");
-        tg.sendData(JSON.stringify({ action: 'registration', fio: fio, phone: phone }));
+    function sendReg() {
+        const data = {
+            action: 'registration',
+            fio: document.getElementById('fio').value,
+            phone: document.getElementById('phone').value
+        };
+        tg.sendData(JSON.stringify(data));
     }
 
-    function sendNewObject() {
-        const name = document.getElementById('obj_name').value;
-        const address = document.getElementById('obj_address').value;
-        const gis = document.getElementById('obj_2gis').value;
-        const start = document.getElementById('date_start').value;
-        const end = document.getElementById('date_end').value;
-        const sq = document.getElementById('sq_plan').value;
-
-        if (!name || !address || !gis || !start || !end || !sq) {
-            return tg.showAlert("Заполните все поля со звездочкой!");
-        }
-
+    function sendObj() {
         const blocks = [];
-        document.querySelectorAll('.block-unit').forEach((el, idx) => {
-            blocks.push({
-                num: idx + 1,
-                axis: el.querySelector('.blk-axis').value,
-                floors: el.querySelector('.blk-floors').value
-            });
+        document.querySelectorAll('.b-axis').forEach((el, i) => {
+            blocks.push({ num: i+1, axis: el.value });
         });
-
-        tg.sendData(JSON.stringify({
+        const data = {
             action: 'create_full_object',
-            name: name,
-            address: address,
-            gis_link: gis,
-            sq_plan: sq,
-            sq_fact: document.getElementById('sq_fact').value,
-            parapets: document.getElementById('parapets').value,
-            slopes: document.getElementById('slopes').value,
-            start: start,
-            end: end,
+            name: document.getElementById('obj_name').value,
+            address: document.getElementById('obj_address').value,
+            sq_plan: document.getElementById('obj_sq').value,
             blocks: blocks
-        }));
+        };
+        tg.sendData(JSON.stringify(data));
     }
 </script>
 </body>
