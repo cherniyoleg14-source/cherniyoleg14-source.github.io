@@ -7,14 +7,14 @@
     <link rel="stylesheet" href="https://cloudflare.com">
     <style>
         :root { --dark: #1c1c1c; --accent: #f1c40f; --bg: #f4f7f9; --primary: #2481cc; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
         .header { background: var(--dark); padding: 20px; color: white; text-align: center; border-radius: 0 0 20px 20px; }
         .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s; }
         .active { display: block !important; }
         .card { background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
         label { font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; display: block; margin-top: 10px; }
         input, select { width: 100%; padding: 12px; margin: 5px 0 10px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-        .btn-submit { background: #27ae60; color: white; border: none; padding: 18px; width: 100%; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 15px; width: 100%; }
+        .btn-submit { background: #27ae60; color: white; border: none; padding: 18px; width: 100%; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
         .block-card { border: 1px dashed var(--primary); padding: 10px; border-radius: 10px; margin-top: 10px; background: #fcfcfc; }
         .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #ddd; height: 65px; z-index: 100; }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 10px; cursor: pointer; }
@@ -30,15 +30,13 @@
     <small style="color:var(--accent)">IBS INTELLIGENT SYSTEM</small>
 </div>
 
-<!-- ВКЛАДКА ОБЪЕКТЫ -->
+<!-- ВКЛАДКА: ОБЪЕКТЫ -->
 <div id="tab-objects" class="tab-content active">
     <h3 style="margin-top:0">🏗 Текущие объекты</h3>
-    <div id="objects-list">
-        <!-- Сюда подгрузятся данные из URL -->
-    </div>
+    <div id="objects-list"></div>
 </div>
 
-<!-- ВКЛАДКА СОЗДАНИЯ -->
+<!-- ВКЛАДКА: СОЗДАТЬ -->
 <div id="tab-create" class="tab-content">
     <h3 style="margin-top:0">➕ Создание объекта</h3>
     <div class="card">
@@ -46,11 +44,11 @@
         <input type="text" id="name" placeholder="Напр: ЖК Кристалл">
         <label>Адрес объекта *</label>
         <input type="text" id="addr" placeholder="Улица, дом">
-        <label>Ссылка 2ГИС *</label>
+        <label>Ссылка 2ГИС</label>
         <input type="text" id="gis" placeholder="https://2gis.kz...">
         <div style="display:flex; gap:10px">
-            <div style="flex:1"><label>План м2</label><input type="number" id="sq_p"></div>
-            <div style="flex:1"><label>Факт м2</label><input type="number" id="sq_f"></div>
+            <div style="flex:1"><label>План м2</label><input type="number" id="sq_p" value="0"></div>
+            <div style="flex:1"><label>Факт м2</label><input type="number" id="sq_f" value="0"></div>
         </div>
         <div style="display:flex; gap:10px">
             <div style="flex:1"><label>Дата начала</label><input type="date" id="start"></div>
@@ -58,8 +56,8 @@
         </div>
         <label>Количество блоков</label>
         <select id="blocks_count" onchange="updateBlockFields()">
-            <option value="1">1 Блок</option><option value="2">2 Блока</option><option value="3">3 Блока</option>
-            <option value="5">5 Блоков</option><option value="10">10 Блоков</option>
+            <option value="1">1 Блок</option><option value="2">2 Блока</option>
+            <option value="3">3 Блока</option><option value="5">5 Блоков</option>
         </select>
         <div id="blocks-container"></div>
         <button class="btn-submit" onclick="submitProject()">СОЗДАТЬ КАРТОЧКУ ОБЪЕКТА</button>
@@ -75,17 +73,16 @@
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Загрузка списка объектов из параметров URL
+    // Отрисовка списка из URL
     const params = new URLSearchParams(window.location.search);
     const projectsStr = params.get('projects');
-    const container = document.getElementById('objects-list');
-
+    const listDiv = document.getElementById('objects-list');
     if (projectsStr) {
-        projectsStr.split(',').forEach(name => {
-            container.innerHTML += `<div class="card"><strong>${name}</strong><br><small style="color:green">● В работе</small></div>`;
+        projectsStr.split(',').forEach(n => {
+            if(n) listDiv.innerHTML += `<div class="card"><strong>${n}</strong><br><small style="color:green">● В работе</small></div>`;
         });
     } else {
-        container.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Пока нет созданных объектов</p>';
+        listDiv.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Объектов пока нет</p>';
     }
 
     function showTab(id, el) {
@@ -93,7 +90,6 @@
         document.getElementById('tab-' + id).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
         el.classList.add('active-nav');
-        tg.HapticFeedback.impactOccurred('light');
     }
 
     function updateBlockFields() {
@@ -114,32 +110,30 @@
     function submitProject() {
         const name = document.getElementById('name').value;
         const addr = document.getElementById('addr').value;
-
         if(!name || !addr) return tg.showAlert("Заполните Название и Адрес!");
 
-        const blocksData = [];
-        document.querySelectorAll('.block-card').forEach((card, index) => {
+        const blocks = [];
+        document.querySelectorAll('.block-card').forEach((card, i) => {
             const inputs = card.querySelectorAll('input');
-            blocksData.push({
-                num: index + 1,
-                axis: inputs[0].value,
-                floors: inputs[1].value
+            blocks.push({
+                num: i + 1,
+                axis: inputs[0].value || "-",
+                floors: inputs[1].value || "-"
             });
         });
 
-        const payload = {
+        const data = {
             action: 'create_full_project',
-            name: name,
-            addr: addr,
-            gis: document.getElementById('gis').value,
-            sq_p: document.getElementById('sq_p').value,
-            sq_f: document.getElementById('sq_f').value,
-            start: document.getElementById('start').value,
-            end: document.getElementById('end').value,
-            blocks: blocksData
+            name: name, addr: addr,
+            gis: document.getElementById('gis').value || "-",
+            sq_p: document.getElementById('sq_p').value || "0",
+            sq_f: document.getElementById('sq_f').value || "0",
+            start: document.getElementById('start').value || "-",
+            end: document.getElementById('end').value || "-",
+            blocks: blocks
         };
 
-        tg.sendData(JSON.stringify(payload));
+        tg.sendData(JSON.stringify(data));
         tg.close();
     }
 </script>
