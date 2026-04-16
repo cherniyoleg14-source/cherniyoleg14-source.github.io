@@ -7,20 +7,19 @@
     <link rel="stylesheet" href="https://cloudflare.com">
     <style>
         :root { --dark: #1c1c1c; --accent: #f1c40f; --bg: #f4f7f9; --primary: #2481cc; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
         .header { background: var(--dark); padding: 20px; color: white; text-align: center; border-radius: 0 0 20px 20px; }
-        .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s; }
+        .tab-content { display: none; padding: 15px; }
         .active { display: block !important; }
         .card { background: white; padding: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
         label { font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; display: block; margin-top: 10px; }
         input, select { width: 100%; padding: 12px; margin: 5px 0 10px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-        .btn-submit { background: #27ae60; color: white; border: none; padding: 18px; width: 100%; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .btn-submit { background: #27ae60; color: white; border: none; padding: 18px; width: 100%; border-radius: 15px; font-weight: bold; font-size: 16px; cursor: pointer; }
         .block-card { border: 1px dashed var(--primary); padding: 10px; border-radius: 10px; margin-top: 10px; background: #fcfcfc; }
         .nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; border-top: 1px solid #ddd; height: 65px; z-index: 100; }
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 10px; cursor: pointer; }
         .nav-item.active-nav { color: var(--primary); }
         .nav-item i { font-size: 20px; margin-bottom: 4px; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -30,37 +29,26 @@
     <small style="color:var(--accent)">IBS INTELLIGENT SYSTEM</small>
 </div>
 
-<!-- ВКЛАДКА: ОБЪЕКТЫ -->
 <div id="tab-objects" class="tab-content active">
-    <h3 style="margin-top:0">🏗 Текущие объекты</h3>
+    <h3 style="margin-top:0">🏗 Список объектов</h3>
     <div id="objects-list"></div>
 </div>
 
-<!-- ВКЛАДКА: СОЗДАТЬ -->
 <div id="tab-create" class="tab-content">
-    <h3 style="margin-top:0">➕ Создание объекта</h3>
+    <h3 style="margin-top:0">➕ Создать объект</h3>
     <div class="card">
         <label>Название объекта *</label>
-        <input type="text" id="name" placeholder="Напр: ЖК Кристалл">
-        <label>Адрес объекта *</label>
+        <input type="text" id="name" placeholder="ЖК Кристалл">
+        <label>Адрес *</label>
         <input type="text" id="addr" placeholder="Улица, дом">
-        <label>Ссылка 2ГИС</label>
-        <input type="text" id="gis" placeholder="https://2gis.kz...">
-        <div style="display:flex; gap:10px">
-            <div style="flex:1"><label>План м2</label><input type="number" id="sq_p" value="0"></div>
-            <div style="flex:1"><label>Факт м2</label><input type="number" id="sq_f" value="0"></div>
-        </div>
-        <div style="display:flex; gap:10px">
-            <div style="flex:1"><label>Дата начала</label><input type="date" id="start"></div>
-            <div style="flex:1"><label>Дата окончания</label><input type="date" id="end"></div>
-        </div>
+        <label>План м2 *</label>
+        <input type="number" id="sq_p" value="0">
         <label>Количество блоков</label>
         <select id="blocks_count" onchange="updateBlockFields()">
-            <option value="1">1 Блок</option><option value="2">2 Блока</option>
-            <option value="3">3 Блока</option><option value="5">5 Блоков</option>
+            <option value="1">1 Блок</option><option value="2">2 Блока</option><option value="3">3 Блока</option>
         </select>
         <div id="blocks-container"></div>
-        <button class="btn-submit" onclick="submitProject()">СОЗДАТЬ КАРТОЧКУ ОБЪЕКТА</button>
+        <button class="btn-submit" style="margin-top:20px" onclick="submitProject()">ОТПРАВИТЬ В БАЗУ</button>
     </div>
 </div>
 
@@ -73,16 +61,14 @@
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Отрисовка списка из URL
+    // 1. Показываем список из URL
     const params = new URLSearchParams(window.location.search);
     const projectsStr = params.get('projects');
-    const listDiv = document.getElementById('objects-list');
     if (projectsStr) {
+        const container = document.getElementById('objects-list');
         projectsStr.split(',').forEach(n => {
-            if(n) listDiv.innerHTML += `<div class="card"><strong>${n}</strong><br><small style="color:green">● В работе</small></div>`;
+            if(n) container.innerHTML += `<div class="card"><strong>${n}</strong><br><small style="color:green">● В работе</small></div>`;
         });
-    } else {
-        listDiv.innerHTML = '<p style="text-align:center; color:#999; margin-top:20px;">Объектов пока нет</p>';
     }
 
     function showTab(id, el) {
@@ -100,39 +86,46 @@
             container.innerHTML += `
                 <div class="block-card">
                     <span style="font-size:10px; color:var(--primary)">БЛОК ${i}</span>
-                    <input type="text" class="b-axis" placeholder="Оси (А-Б)">
-                    <input type="text" class="b-floors" placeholder="Этажи (1-10)">
+                    <input type="text" class="b-axis" placeholder="Оси">
+                    <input type="text" class="b-floors" placeholder="Этажи">
                 </div>`;
         }
     }
     updateBlockFields();
 
+    // ГЛАВНАЯ ФУНКЦИЯ (ИСПРАВЛЕНА)
     function submitProject() {
         const name = document.getElementById('name').value;
         const addr = document.getElementById('addr').value;
-        if(!name || !addr) return tg.showAlert("Заполните Название и Адрес!");
 
-        const blocks = [];
-        document.querySelectorAll('.block-card').forEach((card, i) => {
-            const inputs = card.querySelectorAll('input');
-            blocks.push({
-                num: i + 1,
-                axis: inputs[0].value || "-",
-                floors: inputs[1].value || "-"
+        if(!name || !addr) {
+            alert("Заполните название и адрес!");
+            return;
+        }
+
+        // Правильный сбор данных из блоков
+        const blocksData = [];
+        const cards = document.querySelectorAll('.block-card');
+        
+        cards.forEach((card, index) => {
+            const axisInput = card.querySelector('.b-axis');
+            const floorsInput = card.querySelector('.b-floors');
+            blocksData.push({
+                num: index + 1,
+                axis: axisInput.value || "-",
+                floors: floorsInput.value || "-"
             });
         });
 
         const data = {
             action: 'create_full_project',
-            name: name, addr: addr,
-            gis: document.getElementById('gis').value || "-",
+            name: name,
+            addr: addr,
             sq_p: document.getElementById('sq_p').value || "0",
-            sq_f: document.getElementById('sq_f').value || "0",
-            start: document.getElementById('start').value || "-",
-            end: document.getElementById('end').value || "-",
-            blocks: blocks
+            blocks: blocksData
         };
 
+        // Отправка
         tg.sendData(JSON.stringify(data));
         tg.close();
     }
