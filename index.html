@@ -5,17 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org"></script>
     <style>
-        :root { --dark: #1c1c1c; --primary: #2481cc; --accent: #f1c40f; --bg: #f4f7f9; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
-        .header { background: var(--dark); padding: 25px; text-align: center; color: white; border-radius: 0 0 20px 20px; }
+        :root { --dark: #1c1c1c; --accent: #f1c40f; --bg: #f4f7f9; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        .header { background: var(--dark); padding: 25px; text-align: center; color: white; border-radius: 0 0 20px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .logo-main { font-weight: 900; font-size: 1.1rem; letter-spacing: 1.5px; }
         .logo-sub { font-size: 0.65rem; color: var(--accent); margin-top: 5px; text-transform: uppercase; }
-        .container { padding: 20px; display: none; }
-        .container.active { display: block; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        input, select { width: 100%; padding: 12px; margin: 8px 0 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin: 20px; }
+        input { width: 100%; padding: 12px; margin: 8px 0 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
         .btn { background: var(--dark); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .block-unit { border: 1px dashed var(--primary); padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -25,77 +23,49 @@
     <div class="logo-sub">Intelligent Building System</div>
 </div>
 
-<div id="view-reg" class="container">
-    <div class="card">
-        <h3 style="margin-top:0">Регистрация ИТР</h3>
-        <input type="text" id="fio" placeholder="Ваше ФИО">
-        <input type="tel" id="phone" placeholder="Ваш телефон">
-        <button class="btn" onclick="sendReg()">ЗАРЕГИСТРИРОВАТЬСЯ</button>
-    </div>
+<!-- БЛОК РЕГИСТРАЦИИ -->
+<div id="reg-view" class="card">
+    <h3 style="margin-top:0">Регистрация ИТР</h3>
+    <label>ФИО</label>
+    <input type="text" id="reg-fio" placeholder="Введите Фамилию и Имя">
+    <label>Телефон</label>
+    <input type="tel" id="reg-phone" placeholder="+7 (___) ___-__-__">
+    <button class="btn" onclick="register()">ВОЙТИ В СИСТЕМУ</button>
 </div>
 
-<div id="view-create" class="container">
-    <div class="card">
-        <h3 style="margin-top:0">Новый объект</h3>
-        <input type="text" id="obj_name" placeholder="Название объекта">
-        <input type="text" id="obj_address" placeholder="Адрес">
-        <input type="number" id="obj_sq" placeholder="Площадь м2">
-        
-        <label style="font-size:12px">Количество блоков:</label>
-        <select id="blocks_count" onchange="generateBlocks()">
-            <option value="1">1 Блок</option>
-            <option value="2">2 Блока</option>
-            <option value="3">3 Блока</option>
-        </select>
-        <div id="blocks-area"></div>
-        
-        <button class="btn" onclick="sendObj()">СОЗДАТЬ ОБЪЕКТ</button>
-    </div>
+<!-- БЛОК СОЗДАНИЯ ОБЪЕКТА -->
+<div id="create-view" class="card hidden">
+    <h3 style="margin-top:0">Новый объект</h3>
+    <input type="text" id="obj-name" placeholder="Наименование объекта">
+    <input type="text" id="obj-addr" placeholder="Адрес">
+    <input type="number" id="obj-sq" placeholder="Площадь м2">
+    <button class="btn" onclick="createObj()">СОЗДАТЬ ОБЪЕКТ</button>
 </div>
 
 <script>
     let tg = window.Telegram.WebApp;
     tg.expand();
-    tg.ready();
 
-    // Логика переключения экранов
+    // Проверяем статус через URL
     const params = new URLSearchParams(window.location.search);
     if (params.get('registered') === 'true') {
-        document.getElementById('view-create').classList.add('active');
-        generateBlocks();
-    } else {
-        document.getElementById('view-reg').classList.add('active');
+        document.getElementById('reg-view').classList.add('hidden');
+        document.getElementById('create-view').classList.remove('hidden');
     }
 
-    function generateBlocks() {
-        const count = document.getElementById('blocks_count').value;
-        const area = document.getElementById('blocks-area');
-        area.innerHTML = '';
-        for(let i=1; i<=count; i++) {
-            area.innerHTML += `<div class="block-unit">Блок ${i}: <input type="text" class="b-axis" placeholder="Оси"></div>`;
-        }
-    }
-
-    function sendReg() {
+    function register() {
         const data = {
             action: 'registration',
-            fio: document.getElementById('fio').value,
-            phone: document.getElementById('phone').value
+            fio: document.getElementById('reg-fio').value,
+            phone: document.getElementById('reg-phone').value
         };
         tg.sendData(JSON.stringify(data));
     }
 
-    function sendObj() {
-        const blocks = [];
-        document.querySelectorAll('.b-axis').forEach((el, i) => {
-            blocks.push({ num: i+1, axis: el.value });
-        });
+    function createObj() {
         const data = {
             action: 'create_full_object',
-            name: document.getElementById('obj_name').value,
-            address: document.getElementById('obj_address').value,
-            sq_plan: document.getElementById('obj_sq').value,
-            blocks: blocks
+            name: document.getElementById('obj-name').value
         };
         tg.sendData(JSON.stringify(data));
     }
