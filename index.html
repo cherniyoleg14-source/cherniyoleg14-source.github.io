@@ -5,34 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org"></script>
     <style>
-        body { font-family: sans-serif; background: #f4f7f9; margin: 0; padding: 0; text-align: center; }
-        .header { background: #1c1c1c; padding: 25px; color: white; border-radius: 0 0 20px 20px; }
-        .card { background: white; padding: 20px; border-radius: 15px; margin: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
-        .btn { background: #1c1c1c; color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .hidden { display: none; }
+        :root { --dark: #1c1c1c; --accent: #f1c40f; --bg: #f4f7f9; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; text-align: center; color: #333; }
+        .header { background: var(--dark); padding: 25px; color: white; border-radius: 0 0 20px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .card { background: white; padding: 20px; border-radius: 15px; margin: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); display: none; }
+        .active { display: block !important; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
+        .btn { background: var(--dark); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
     </style>
 </head>
 <body>
     <div class="header">
         <strong>LAM GROUP CONSTRUCTION</strong><br>
-        <small style="color: #f1c40f;">INTELLIGENT SYSTEM</small>
+        <small style="color: var(--accent);">INTELLIGENT BUILDING SYSTEM</small>
     </div>
 
-    <!-- БЛОК 1: ДЛЯ ИТР (Виден всегда) -->
+    <!-- ФОРМА РЕГИСТРАЦИИ -->
     <div id="view-reg" class="card">
-        <h3>Регистрация сотрудника</h3>
+        <h3 style="margin-top:0">Регистрация ИТР</h3>
         <input type="text" id="fio" placeholder="Ваше ФИО">
-        <input type="tel" id="phone" placeholder="Телефон">
-        <button class="btn" onclick="sendData('registration')">ОТПРАВИТЬ ДАННЫЕ</button>
+        <input type="tel" id="phone" placeholder="Ваш телефон">
+        <button class="btn" onclick="send('registration')">ВОЙТИ В СИСТЕМУ</button>
     </div>
 
-    <!-- БЛОК 2: ДЛЯ РУКОВОДИТЕЛЯ (По умолчанию скрыт, но включается меткой) -->
-    <div id="view-create" class="card hidden">
-        <h3>Новый объект</h3>
+    <!-- ФОРМА СОЗДАНИЯ ОБЪЕКТА -->
+    <div id="view-create" class="card">
+        <h3 style="margin-top:0">Новый объект</h3>
         <input type="text" id="obj-name" placeholder="Название объекта">
         <input type="text" id="obj-addr" placeholder="Адрес">
-        <button class="btn" onclick="sendData('create_full_object')">СОЗДАТЬ ОБЪЕКТ</button>
+        <input type="number" id="obj-sq" placeholder="Проектная площадь м2">
+        <button class="btn" onclick="send('create_object')">СОЗДАТЬ ОБЪЕКТ</button>
     </div>
 
     <script>
@@ -40,28 +42,30 @@
         tg.expand();
         tg.ready();
 
-        // Простейшая проверка: если в ссылке есть reg=1, показываем форму объекта
-        if (window.location.search.includes('reg=1')) {
+        const params = new URLSearchParams(window.location.search);
+        const mode = params.get('reg');
+
+        // Переключение экранов: 1 - Объект, 0 или null - Регистрация
+        if (mode === '1') {
+            document.getElementById('view-create').classList.add('active');
             document.getElementById('view-reg').style.display = 'none';
-            document.getElementById('view-create').classList.remove('hidden');
+        } else {
+            document.getElementById('view-reg').classList.add('active');
+            document.getElementById('view-create').style.display = 'none';
         }
 
-        function sendData(action) {
-            let result = { action: action };
-            if (action === 'registration') {
-                result.fio = document.getElementById('fio').value;
-                result.phone = document.getElementById('phone').value;
+        function send(act) {
+            let data = { action: act };
+            if (act === 'registration') {
+                data.fio = document.getElementById('fio').value;
+                data.phone = document.getElementById('phone').value;
             } else {
-                result.name = document.getElementById('obj-name').value;
-                result.addr = document.getElementById('obj-addr').value;
+                data.name = document.getElementById('obj-name').value;
+                data.addr = document.getElementById('obj-addr').value;
+                data.sq = document.getElementById('obj-sq').value;
             }
-
-            if (!result.fio && !result.name) {
-                alert("Заполните поля!");
-                return;
-            }
-
-            tg.sendData(JSON.stringify(result));
+            if (!data.fio && !data.name) return alert("Заполните поля!");
+            tg.sendData(JSON.stringify(data));
             tg.close();
         }
     </script>
